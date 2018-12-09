@@ -26,8 +26,6 @@ def process(text, exclude_rate=0.5, include_rate=0.5, repeat_rate=0.1, delete_ra
             txt.append(min_w)
         txt = [x for x in txt if x]
         res.append(txt)
-    print(res)
-    print(tokenized_text)
     labels = []
     for org, par in zip(tokenized_text, res):
         label = []
@@ -143,39 +141,39 @@ def is_katakana(title):
         return True
     return False
 
-# if __name__ == '__main__':
-#     with open('../data/ja_test_corpus.txt', 'r') as f:
-#         text = f.readlines()
-#         text = [t.replace(' ', '') for t in text]
-#
-#         labels, btext = process(text)
-#
-#         result = []
-#         for label, bt in zip(labels, btext):
-#             label.append(bt.strip())
-#             result.append('\t'.join(label))
-#     with open('../data/ja_test_processed.txt', 'w') as f:
-#         f.writelines('\n'.join(result))
-
-# Test用
 if __name__ == '__main__':
-    text = [
-        'それでは、ただいまより歌わせていただきます',
-        '重要な予定があるので明日は起きられる',
-        'ここからは富士山を見られる',
-        'それでは、ただいまより話させていただきます'
-    ]
-    labels, btext = process(text)
-    print('Raw text as below')
-    pprint.pprint(text)
-    print()
-    print('Broken text as below')
-    pprint.pprint(btext)
+    with open('../data/ja_test_corpus.txt', 'r') as f:
+        text = f.readlines()
+        text = [t.replace(' ', '') for t in text]
 
-    result = []
-    for label, bt in zip(labels, btext):
-        label.append(bt.strip())
-        result.append('\t'.join(label))
-    pprint.pprint(result)
+        labels, btext = process(text)
+
+        result = []
+        for label, bt in zip(labels, btext):
+            label.append(bt.strip())
+            result.append('\t'.join(label))
     with open('../data/ja_test_processed.txt', 'w') as f:
         f.writelines('\n'.join(result))
+
+# Test用
+# if __name__ == '__main__':
+#     text = [
+#         'それでは、ただいまより歌わせていただきます',
+#         '重要な予定があるので明日は起きられる',
+#         'ここからは富士山を見られる',
+#         'それでは、ただいまより話させていただきます'
+#     ]
+#     labels, btext = process(text)
+#     print('Raw text as below')
+#     pprint.pprint(text)
+#     print()
+#     print('Broken text as below')
+#     pprint.pprint(btext)
+#
+#     result = []
+#     for label, bt in zip(labels, btext):
+#         label.append(bt.strip())
+#         result.append('\t'.join(label))
+#     pprint.pprint(result)
+#     with open('../data/ja_test_processed.txt', 'w') as f:
+#         f.writelines('\n'.join(result))
