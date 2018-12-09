@@ -39,15 +39,15 @@ def process(text, exclude_rate=0.5, include_rate=0.5, repeat_rate=0.1, delete_ra
 
 
 def tokenize(text):
-    res = []
-    for sentence in text:
-        tokenized_sen = []
-        node = tagger.parseToNode(sentence)
-        while node:
-            tokenized_sen.append(node.surface)
-            node = node.next
-        tokenized_sen = [x for x in tokenized_sen if x]
-        res.append(tokenized_sen)
+res = []
+for sentence in text:
+    tokenized_sen = []
+    node = tagger.parseToNode(sentence)
+    while node:
+        tokenized_sen.append(node.feature.split(",")[6])
+        node = node.next
+    tokenized_sen = [x for x in tokenized_sen if x]
+    res.append(tokenized_sen[1:-1])
     return res
 
 def random_exclude_RA(text, exclude_rate):
@@ -60,12 +60,12 @@ def random_exclude_RA(text, exclude_rate):
                 if random.random() < exclude_rate:
                     parsed_sen.append('れる')
                 else:
-                    parsed_sen.append(node.surface)
+                    parsed_sen.append(node.feature.split(",")[6])
             else:
-                parsed_sen.append(node.surface)
+                parsed_sen.append(node.feature.split(",")[6])
             node = node.next
         # res.append(''.join(parsed_sen))
-        res.append(parsed_sen)
+        res.append(parsed_sen[1:-1])
     return res
 
 def random_include_SA(text, include_rate):
@@ -80,16 +80,16 @@ def random_include_SA(text, include_rate):
                     if random.random() < include_rate:
                         parsed_sen.append('させ')
                     else:
-                        parsed_sen.append(node.surface)
+                        parsed_sen.append(node.feature.split(",")[6])
                 prior_cond = False
             elif ('五段' in node.feature.split(',')[4]) and ('サ行' not in node.feature.split(',')[4]) and node.feature.split(',')[-4] == '未然形':
                 prior_cond = True # 語段活用未然形の動詞がきたら構える
-                parsed_sen.append(node.surface)
+                parsed_sen.append(node.feature.split(",")[6])
             else:
-                parsed_sen.append(node.surface)
+                parsed_sen.append(node.feature.split(",")[6])
             node = node.next
         # res.append(''.join(parsed_sen))
-        res.append(parsed_sen)
+        res.append(parsed_sen[1:-1])
     return res
 
 def random_repeat_END(text, repeat_rate):
@@ -98,16 +98,16 @@ def random_repeat_END(text, repeat_rate):
         parsed_sen = []
         node = tagger.parseToNode(sentence)
         while node:
-            if is_hiragana(node.surface) and node.surface != '': # ひらがなの場合のみ語尾をリピートする
+            if is_hiragana(node.feature.split(",")[6]) and node.feature.split(",")[6] != '': # ひらがなの場合のみ語尾をリピートする
                 if random.random() < repeat_rate:
-                    parsed_sen.append(str(node.surface) + str(node.surface[-1]))
+                    parsed_sen.append(str(node.feature.split(",")[6]) + str(node.feature.split(",")[6][-1]))
                 else:
-                    parsed_sen.append(node.surface)
+                    parsed_sen.append(node.feature.split(",")[6])
             else:
-                parsed_sen.append(node.surface)
+                parsed_sen.append(node.feature.split(",")[6])
             node = node.next
         # res.append(''.join(parsed_sen))
-        res.append(parsed_sen)
+        res.append(parsed_sen[1:-1])
     return res
 
 def random_delete_MID(text, delete_rate):
@@ -116,17 +116,17 @@ def random_delete_MID(text, delete_rate):
         parsed_sen = []
         node = tagger.parseToNode(sentence)
         while node:
-            if is_hiragana(node.surface) and node.surface != '': # ひらがなの場合のみ中間文字をdropする
+            if is_hiragana(node.feature.split(",")[6]) and node.feature.split(",")[6] != '': # ひらがなの場合のみ中間文字をdropする
                 if random.random() < delete_rate:
-                    k = random.choice(range(len(node.surface)))
-                    parsed_sen.append(''.join([c for i, c in enumerate(node.surface) if i != k]))
+                    k = random.choice(range(len(node.feature.split(",")[6])))
+                    parsed_sen.append(''.join([c for i, c in enumerate(node.feature.split(",")[6]) if i != k]))
                 else:
-                    parsed_sen.append(node.surface)
+                    parsed_sen.append(node.feature.split(",")[6])
             else:
-                parsed_sen.append(node.surface)
+                parsed_sen.append(node.feature.split(",")[6])
             node = node.next
         # res.append(''.join(parsed_sen))
-        res.append(parsed_sen)
+        res.append(parsed_sen[1:-1])
     return res
 
 def is_hiragana(title):
@@ -141,39 +141,39 @@ def is_katakana(title):
         return True
     return False
 
-if __name__ == '__main__':
-    with open('../data/ja_test_corpus.txt', 'r') as f:
-        text = f.readlines()
-        text = [t.replace(' ', '') for t in text]
-
-        labels, btext = process(text)
-
-        result = []
-        for label, bt in zip(labels, btext):
-            label.append(bt.strip())
-            result.append('\t'.join(label))
-    with open('../data/ja_test_processed.txt', 'w') as f:
-        f.writelines('\n'.join(result))
-
-# Test用
 # if __name__ == '__main__':
-#     text = [
-#         'それでは、ただいまより歌わせていただきます',
-#         '重要な予定があるので明日は起きられる',
-#         'ここからは富士山を見られる',
-#         'それでは、ただいまより話させていただきます'
-#     ]
-#     labels, btext = process(text)
-#     print('Raw text as below')
-#     pprint.pprint(text)
-#     print()
-#     print('Broken text as below')
-#     pprint.pprint(btext)
+#     with open('../data/ja_test_corpus.txt', 'r') as f:
+#         text = f.readlines()
+#         text = [t.replace(' ', '') for t in text]
 #
-#     result = []
-#     for label, bt in zip(labels, btext):
-#         label.append(bt.strip())
-#         result.append('\t'.join(label))
-#     pprint.pprint(result)
+#         labels, btext = process(text)
+#
+#         result = []
+#         for label, bt in zip(labels, btext):
+#             label.append(bt.strip())
+#             result.append('\t'.join(label))
 #     with open('../data/ja_test_processed.txt', 'w') as f:
 #         f.writelines('\n'.join(result))
+
+# Test用
+if __name__ == '__main__':
+    text = [
+        'それでは、ただいまより歌わせていただきます',
+        '重要な予定があるので明日は起きられる',
+        'ここからは富士山を見られる',
+        'それでは、ただいまより話させていただきます'
+    ]
+    labels, btext = process(text)
+    print('Raw text as below')
+    pprint.pprint(text)
+    print()
+    print('Broken text as below')
+    pprint.pprint(btext)
+
+    result = []
+    for label, bt in zip(labels, btext):
+        label.append(bt.strip())
+        result.append('\t'.join(label))
+    pprint.pprint(result)
+    with open('../data/ja_test_processed.txt', 'w') as f:
+        f.writelines('\n'.join(result))
