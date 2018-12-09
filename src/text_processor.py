@@ -15,6 +15,7 @@ def process(text, exclude_rate=0.5, include_rate=0.5, repeat_rate=0.1, delete_ra
     text3 = random_repeat_END(text, repeat_rate)
     text4 = random_delete_MID(text, delete_rate)
     tokenized_text = tokenize(text)
+    print('tokenized', tokenized_text)
     for t1, t2, t3, t4 in zip(text1, text2, text3, text4):
         txt = []
         for w1, w2, w3, w4 in zip(t1, t2, t3, t4):
@@ -48,7 +49,7 @@ def tokenize(text):
             node = node.next
         tokenized_sen = [x for x in tokenized_sen if x]
         res.append(tokenized_sen[1:-1])
-        return res
+    return res
 
 def random_exclude_RA(text, exclude_rate):
     res = []
@@ -169,11 +170,12 @@ if __name__ == '__main__':
     print()
     print('Broken text as below')
     pprint.pprint(btext)
+    print('labels')
+    pprint.pprint(labels)
 
     result = []
     for label, bt in zip(labels, btext):
         label.append(bt.strip())
         result.append('\t'.join(label))
-    pprint.pprint(result)
     with open('../data/ja_test_processed.txt', 'w') as f:
         f.writelines('\n'.join(result))
