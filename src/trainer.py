@@ -33,23 +33,22 @@ extra_hidden_size = 50
 epoch = 30
 
 def forward(batchs, tags, model, word2id, mode):
-    softmax = nn.Softmax()
+    argmax_pres = []
     cross_entropy_loss = nn.CrossEntropyLoss()
 
-    x = Variable(torch.LongTensor(
-        [[word2id[word] if word in word2id else word2id['<unk>'] for word in sen] for sen in batchs])).t()
+    x = Variable(torch.LongTensor([[word2id[word] if word in word2id else word2id['<unk>'] for word in sen] for sen in batchs])).t()
 
     if torch.cuda.is_available():
         x = x.cuda()
 
     pres = model(x)
-    sortmax_pres = [softmax(pre) for pre in pres]
+    for pre in pres:
+        argmax_pres.append([int(torch.argmax(ele)) for ele in pre])
     condition = x.data != -1
-
     if mode:  # are we calculating the loss??
         accum_loss = Variable(torch.zeros(1))  # initialize the loss count to zero
         _tags = np.array(tags, dtype=np.int64)
-        tags = Variable(torch.from_numpy(_tags)).t()
+        tags = Variable(torch.from_numpy(_tags)).t() # (padded_sentence_length, batch_size)
 
         if torch.cuda.is_available():
             accum_loss = accum_loss.cuda()
@@ -58,9 +57,9 @@ def forward(batchs, tags, model, word2id, mode):
         for tag, pre in zip(tags, pres):
             accum_loss += cross_entropy_loss(pre, tag)
 
-        return accum_loss, sortmax_pres, condition
+        return accum_loss, argmax_pres, condition
 
-    return sortmax_pres, condition
+    return argmax_pres, condition
 
 
 def evaluate(model, word2id):
