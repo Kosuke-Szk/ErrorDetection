@@ -39,16 +39,16 @@ def process(text, exclude_rate=0.5, include_rate=0.5, repeat_rate=0.1, delete_ra
 
 
 def tokenize(text):
-    res = []
-    for sentence in text:
-        tokenized_sen = []
-        node = tagger.parseToNode(sentence)
-        while node:
-            tokenized_sen.append(node.feature.split(",")[6])
-            node = node.next
-        tokenized_sen = [x for x in tokenized_sen if x]
-        res.append(tokenized_sen[1:-1])
-        return res
+res = []
+for sentence in text:
+    tokenized_sen = []
+    node = tagger.parseToNode(sentence)
+    while node:
+        tokenized_sen.append(node.feature.split(",")[6])
+        node = node.next
+    tokenized_sen = [x for x in tokenized_sen if x]
+    res.append(tokenized_sen[1:-1])
+    return res
 
 def random_exclude_RA(text, exclude_rate):
     res = []
