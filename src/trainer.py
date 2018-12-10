@@ -18,9 +18,9 @@ random.seed(0)
 np.random.seed(0)
 torch.manual_seed(0)
 
-train_txt = "../data/train.kaneko.txt"
+train_txt = "../data/ja_train.txt" # "../data/train.kaneko.txt"
 dev_txt = "../data/dev.kaneko.txt"
-test_txt = "../data/test.kaneko.txt"
+test_txt =  "../data/ja_valid.txt" # "../data/test.kaneko.txt"
 load_model  = "../ptmodel/ptBLSTM.model0"
 vocab_dict = "../ptmodel/BLSTMVocab.pkl"
 

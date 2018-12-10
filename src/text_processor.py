@@ -8,7 +8,7 @@ except:
     tagger = MeCab.Tagger('-Ochasen')
 tagger.parse('')
 
-def process(text, exclude_rate=0.5, include_rate=0.5, repeat_rate=0.1, delete_rate=0.1):
+def process(text, exclude_rate=0.5, include_rate=0.5, repeat_rate=0.05, delete_rate=0.0):
     res = []
     text1 = random_exclude_RA(text, exclude_rate)
     text2 = random_include_SA(text, include_rate)
@@ -65,7 +65,7 @@ def random_exclude_RA(text, exclude_rate):
                 parsed_sen.append(node.surface)
             node = node.next
         # res.append(''.join(parsed_sen))
-        res.append(parsed_sen)
+        res.append(parsed_sen[1:-1])
     return res
 
 def random_include_SA(text, include_rate):
@@ -76,20 +76,22 @@ def random_include_SA(text, include_rate):
         prior_cond = False
         while node:
             if prior_cond: # 前の単語が五段活用未然形だった場合
-                if node.feature.split(',')[1] == '接尾' and node.feature.split(',')[-3] == 'せる':
+                if (node.feature.split(',')[1] == '接尾') and (node.feature.split(',')[-3] == 'せる'):
                     if random.random() < include_rate:
                         parsed_sen.append('させ')
                     else:
                         parsed_sen.append(node.surface)
+                else:
+                    parsed_sen.append(node.surface)
                 prior_cond = False
-            elif ('五段' in node.feature.split(',')[4]) and ('サ行' not in node.feature.split(',')[4]) and node.feature.split(',')[-4] == '未然形':
+            elif ('五段' in node.feature.split(',')[4]) and ('サ行' not in node.feature.split(',')[4]) and (node.feature.split(',')[-4] == '未然形'):
                 prior_cond = True # 語段活用未然形の動詞がきたら構える
                 parsed_sen.append(node.surface)
             else:
                 parsed_sen.append(node.surface)
             node = node.next
         # res.append(''.join(parsed_sen))
-        res.append(parsed_sen)
+        res.append(parsed_sen[1:-1])
     return res
 
 def random_repeat_END(text, repeat_rate):
@@ -107,7 +109,7 @@ def random_repeat_END(text, repeat_rate):
                 parsed_sen.append(node.surface)
             node = node.next
         # res.append(''.join(parsed_sen))
-        res.append(parsed_sen)
+        res.append(parsed_sen[1:-1])
     return res
 
 def random_delete_MID(text, delete_rate):
@@ -126,7 +128,7 @@ def random_delete_MID(text, delete_rate):
                 parsed_sen.append(node.surface)
             node = node.next
         # res.append(''.join(parsed_sen))
-        res.append(parsed_sen)
+        res.append(parsed_sen[1:-1])
     return res
 
 def is_hiragana(title):
@@ -142,15 +144,16 @@ def is_katakana(title):
     return False
 
 if __name__ == '__main__':
-    with open('../data/ja_test_corpus.txt', 'r') as f:
+    with open('../data/ja_corpus.txt', 'r') as f:
         text = f.readlines()
-        text = [t.replace(' ', '') for t in text]
+        # text = [t.replace(' ', '') for t in text]
 
         labels, btext = process(text)
 
         result = []
-        for label, bt in zip(labels, btext):
+        for label, bt, t in zip(labels, btext, text):
             label.append(bt.strip())
+            # label.append(t.strip())
             result.append('\t'.join(label))
     with open('../data/ja_test_processed.txt', 'w') as f:
         f.writelines('\n'.join(result))
@@ -158,10 +161,11 @@ if __name__ == '__main__':
 # Test用
 # if __name__ == '__main__':
 #     text = [
-#         'それでは、ただいまより歌わせていただきます',
-#         '重要な予定があるので明日は起きられる',
-#         'ここからは富士山を見られる',
-#         'それでは、ただいまより話させていただきます'
+#         # 'それでは、ただいまより歌わせていただきます。',
+#         # '重要な予定があるので明日は起きられる。',
+#         # 'ここからは富士山を見られる。',
+#         # 'それでは、ただいまより話させていただきます',
+#         'タバコを吸わなければ、長生きできるだろう'
 #     ]
 #     labels, btext = process(text)
 #     print('Raw text as below')
