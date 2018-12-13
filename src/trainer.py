@@ -218,7 +218,6 @@ def test():
             batch = fill_batch([b[-1].split() for b in batchs[j]])
             tags = fill_batch(tags, token=0)
             accum_loss, pres, cons = forward(batch, tags, model, word2id, mode=True)
-            print(pres)
             total_loss += accum_loss.data[0]
         print("total_loss {}".format(total_loss))
         evaluate(model, word2id)
