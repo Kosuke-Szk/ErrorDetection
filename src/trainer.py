@@ -32,16 +32,20 @@ hidden_size = 200
 extra_hidden_size = 50
 epoch = 30
 
-import xp
-
 def precision_recall_f(pres, tags, cons):
-    c_p = 0
-    correct_p = 0
+    c_p = 0  # actual
+    correct_p = 0  # predicted
     c_r = 0
     correct_r = 0
-    tags = Variable(xp.array(tags, dtype=xp.int32).T)
+    _tags = np.array(tags, dtype=np.int64)
+    tags = Variable(torch.from_numpy(_tags).t())
+    if torch.cuda.is_available:
+        tags = tags.cuda()
+
+    # pres is the post-soft max probabilities
+    # num is index, a is (pres, tag)
     for num, a in enumerate(zip(pres, tags)):
-        pre_l = [int(xp.argmax(a[0].data[k])) for k in range(len(a[0].data)) if cons[num][k] == True]
+        pre_l = [a[0].data[k].max(0)[1].cpu().numpy()[0] for k in range(len(a[0])) if cons[num][k] == True]
         tag_l = [int(a[1].data[n]) for n in range(len(a[1].data)) if cons[num][n] == True]
         for a, b in zip(tag_l, pre_l):
             if a == 1:
@@ -67,6 +71,7 @@ def evaluate(model, word2vec):
         tag0 = batch[:]
         tags = [a[:-1] for a in tag0]
         # batch = [b[1:] for b in batch]
+        batch = batch[1:]
         batch = fill_batch(b[-1].split() for b in batch)
         tags = fill_batch(tags, token=-1)
         pres, cons = forward(batch, tags, m, word2id, mode=False)
