@@ -32,6 +32,61 @@ hidden_size = 200
 extra_hidden_size = 50
 epoch = 30
 
+import xp
+
+def precision_recall_f(pres, tags, cons):
+    c_p = 0
+    correct_p = 0
+    c_r = 0
+    correct_r = 0
+    tags = Variable(xp.array(tags, dtype=xp.int32).T)
+    for num, a in enumerate(zip(pres, tags)):
+        pre_l = [int(xp.argmax(a[0].data[k])) for k in range(len(a[0].data)) if cons[num][k] == True]
+        tag_l = [int(a[1].data[n]) for n in range(len(a[1].data)) if cons[num][n] == True]
+        for a, b in zip(tag_l, pre_l):
+            if a == 1:
+                c_r += 1
+                if b == a:
+                    correct_r += 1
+            if b == 1:
+                c_p += 1
+                if b == a:
+                    correct_p += 1
+    return c_p, correct_p, c_r, correct_r
+
+def evaluate(model, word2vec):
+    c_p = 0
+    correct_p = 0
+    c_r = 0
+    correct_r = 0
+    m = model.copy()
+    gen1 = gens.word_list(dev_txt)
+    gen2 = gens.batch(gens.sortedparallel(gen1, embed_size*batch_size), batch_size)
+    batchs = [b for b in gen2]
+    for batch in batchs:
+        tag0 = batch[:]
+        tags = [a[:-1] for a in tag0]
+        # batch = [b[1:] for b in batch]
+        batch = fill_batch(b[-1].split() for b in batch)
+        tags = fill_batch(tags, token=-1)
+        pres, cons = forward(batch, tags, m, word2id, mode=False)
+        a,b,c,d = precision_recall_f(pres, tags, cons)
+        c_p += a
+        correct_p += b
+        c_r += c
+        correct_r += d
+    try:
+        precision = correct_p / c_p
+        recall = correct_r / r
+        f_measure = (1 + 0.5**2)*precision*recall / (0.5**2*precision + recall)
+    except:
+        precision = 'nothing'
+        recall = 'nothing'
+        f_measure = 'nothing'
+    print('Precision:\t{}'.format(precision))
+    print('Recall:\t{}'.format(recall))
+    print('F-Value:\t{}'.fotmat(f_measure))
+
 def forward(batchs, tags, model, word2id, mode):
     argmax_pres = []
     cross_entropy_loss = nn.CrossEntropyLoss()
@@ -166,6 +221,7 @@ def test():
             print(pres)
             total_loss += accum_loss.data[0]
         print("total_loss {}".format(total_loss))
+        evaluate(model, word2id)
 
 if __name__ == '__main__':
     import sys
