@@ -19,7 +19,7 @@ np.random.seed(0)
 torch.manual_seed(0)
 
 train_txt = "../data/ja_train.txt" # "../data/train.kaneko.txt"
-dev_txt = "../data/dev.kaneko.txt"
+# dev_txt = "../data/dev.kaneko.txt"
 test_txt =  "../data/ja_valid.txt" # "../data/test.kaneko.txt"
 load_model  = "../ptmodel/ptBLSTM.model0"
 vocab_dict = "../ptmodel/BLSTMVocab.pkl"
@@ -42,10 +42,9 @@ def precision_recall_f(pres, tags, cons):
     if torch.cuda.is_available:
         tags = tags.cuda()
 
-    # pres is the post-soft max probabilities
-    # num is index, a is (pres, tag)
     for num, a in enumerate(zip(pres, tags)):
-        pre_l = [a[0].data[k].max(0)[1].cpu().numpy()[0] for k in range(len(a[0])) if cons[num][k] == True]
+        a = torch.tensor(a)
+        pre_l = [int(a[0].data[k]) for k in range(len(a[0].data)) if cons[num][k] == True]
         tag_l = [int(a[1].data[n]) for n in range(len(a[1].data)) if cons[num][n] == True]
         for a, b in zip(tag_l, pre_l):
             if a == 1:
@@ -70,7 +69,6 @@ def evaluate(model, word2vec):
     for batch in batchs:
         tag0 = batch[:]
         tags = [a[:-1] for a in tag0]
-        # batch = [b[1:] for b in batch]
         batch = batch[1:]
         batch = fill_batch(b[-1].split() for b in batch)
         tags = fill_batch(tags, token=-1)
@@ -128,13 +126,12 @@ def evaluate(model, word2id):
     c_r = 0
     correct_r = 0
 
-    gen1 = gens.word_list(dev_txt)
+    gen1 = gens.word_list(test_txt)
     gen2 = gens.batch(gens.sorted_parallel(gen1, embed_size * batch_size), batch_size)
     batchs = [b for b in gen2]
     for batch in batchs:
         tag0 = batch[:]
         tags = [a[:-1] for a in tag0]
-        batch = [b[1:] for b in batch]
         batch = fill_batch([b[-1].split() for b in batch])
         tags = fill_batch(tags, token=-1)
         pres, cons = forward(batch, tags, model, word2id, mode=False)
@@ -196,6 +193,7 @@ def train():
             opt.step()
             total_loss += accum_loss.data[0]
         print("total_loss {}".format(total_loss))
+        evaluate(model, word2id)
         torch.save(model.state_dict(), "{}{}".format(load_model, i))
 
     torch.save(model.state_dict(), load_model)
@@ -203,6 +201,7 @@ def train():
         pickle.dump(word2id, f)
 
 def test():
+    res = []
     word2id = pickle.load(open(vocab_dict, 'rb'))
     model = BiLSTM(vocab_size, embed_size, hidden_size, output_size, extra_hidden_size)
     model.load_state_dict(torch.load(load_model))
@@ -224,8 +223,14 @@ def test():
             tags = fill_batch(tags, token=0)
             accum_loss, pres, cons = forward(batch, tags, model, word2id, mode=True)
             total_loss += accum_loss.data[0]
+            pres = np.array(pres, dtype=np.int64).T
+            for pre, text in zip(pres, batch):
+                pre = [str(p) for p in pre]
+                res.append(' '.join(pre) + '\t' + ' '.join(text))
         print("total_loss {}".format(total_loss))
-        evaluate(model, word2id)
+        with open('./save1.txt', 'w') as f:
+            f.write('\n'.join(res))
+        evaluate(model, word2id) # F値を出したい場合はこちら
 
 if __name__ == '__main__':
     import sys
