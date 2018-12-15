@@ -8,7 +8,7 @@ except:
     tagger = MeCab.Tagger('-Ochasen')
 tagger.parse('')
 
-def process(text, exclude_rate=0.5, include_rate=0.5, repeat_rate=0.05, delete_rate=0.0):
+def process(text, exclude_rate=0.7, include_rate=0.7, repeat_rate=0.0, delete_rate=0.0):
     res = []
     text1 = random_exclude_RA(text, exclude_rate)
     text2 = random_include_SA(text, include_rate)
@@ -58,7 +58,7 @@ def random_exclude_RA(text, exclude_rate):
         while node:
             if node.feature.split(',')[-3] == 'られる' and node.feature.split(',')[1] == '接尾':
                 if random.random() < exclude_rate:
-                    parsed_sen.append('れる')
+                    parsed_sen.append(node.surface[1:]) # ら抜き
                 else:
                     parsed_sen.append(node.surface)
             else:
@@ -78,7 +78,7 @@ def random_include_SA(text, include_rate):
             if prior_cond: # 前の単語が五段活用未然形だった場合
                 if (node.feature.split(',')[1] == '接尾') and (node.feature.split(',')[-3] == 'せる'):
                     if random.random() < include_rate:
-                        parsed_sen.append('させ')
+                        parsed_sen.append('さ'+node.surface) # さ入れ
                     else:
                         parsed_sen.append(node.surface)
                 else:
@@ -155,7 +155,7 @@ if __name__ == '__main__':
             label.append(bt.strip())
             # label.append(t.strip())
             result.append('\t'.join(label))
-    with open('../data/ja_test_processed.txt', 'w') as f:
+    with open('../data/ja_test_processed_much_ra_sa.txt', 'w') as f:
         f.writelines('\n'.join(result))
 
 # Test用
