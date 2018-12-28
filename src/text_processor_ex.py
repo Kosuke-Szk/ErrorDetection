@@ -154,7 +154,7 @@ if __name__ == '__main__':
 
         result = []
         for label, bt, t in zip(labels, btext, text):
-            label.append(bt.strip())
+            label.append(' '.join(bt.strip()))
             # label.append(t.strip())
             result.append('\t'.join(label))
     with open('../data/ja_test_processed_ex.txt', 'w') as f:
